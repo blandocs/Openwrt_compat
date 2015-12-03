@@ -5,5 +5,5 @@ Source: package/kernel/mac80211
 Section: kernel
 Maintainer: Felix Fietkau <nbd@openwrt.org>
 Architecture: ar71xx
-Installed-Size: 202819
+Installed-Size: 202952
 Description:  Generic IEEE 802.11 Networking Stack (mac80211)

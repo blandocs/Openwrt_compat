@@ -17,7 +17,7 @@
  *
  */
 
-#include <linux/config.h>
+//#include <linux/config.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -38,6 +38,7 @@
 #include <net/ip.h>
 #include <net/protocol.h>
 #include <net/route.h>
+#include <net/sock.h>
 #include <linux/skbuff.h>
 
 

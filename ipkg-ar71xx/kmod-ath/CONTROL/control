@@ -5,5 +5,5 @@ Source: package/kernel/mac80211
 Section: kernel
 Maintainer: Felix Fietkau <nbd@openwrt.org>
 Architecture: ar71xx
-Installed-Size: 12491
+Installed-Size: 12490
 Description:  This module contains some common parts needed by Atheros Wireless drivers.
