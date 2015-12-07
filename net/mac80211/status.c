@@ -190,7 +190,9 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
     printk(KERN_INFO "head to tail dump\n");
     print_hex_dump(KERN_INFO, "Data: ", DUMP_PREFIX_OFFSET, 16, 1, skb->head, skb->end, true);
     printk(KERN_INFO "\n");
-
+    //print tcp info
+    
+    //
     /*
     printk("protocol %d\n", skb->protocol);
     ipp = (struct iphdr *) skb_network_header(skb);
