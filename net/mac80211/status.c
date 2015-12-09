@@ -183,11 +183,17 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
 	struct ieee80211_mgmt *mgmt = (void *) skb->data;
 	struct ieee80211_local *local = sta->local;
 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-
-	printk(KERN_INFO "frame_acked called");
-	print_skb(NULL, 0, skb);
 	
-
+	struct tcphdr *tcp;
+	tcp = tcp_hdr(skb);
+	if (tcp!=NULL){
+	__be16 src = tcp->source;
+	__be16 dst = tcp->dest;
+	printk("src: %d \ndst: %d", ntohs(src), ntohs(dst)); 
+	}
+	
+	
+	printk(KERN_INFO "frame_acked called");
 	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
 		sta->last_rx = jiffies;
 
