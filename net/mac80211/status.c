@@ -22,8 +22,6 @@
 
 #include <linux/printk.h>
 
-#include "skb_util.h"
-
 void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
 				 struct sk_buff *skb)
 {
@@ -184,8 +182,30 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
 	struct ieee80211_local *local = sta->local;
 	struct ieee80211_sub_if_data *sdata = sta->sdata;
 
-	printk(KERN_INFO "frame_acked called");
-	print_skb(NULL, 0, skb);
+    struct iphdr *ipp;
+    struct tcphdr *hdr;
+
+    printk(KERN_INFO "frame_acked called by ieee80211 skb : %p\n", skb);
+    /*
+	printk(KERN_INFO "frame_acked called\n");
+    print_hex_dump(KERN_INFO, "skbuff: ", DUMP_PREFIX_OFFSET, 16, 1, skb, sizeof(struct sk_buff), true); 
+    printk(KERN_INFO "head to tail dump\n");
+    print_hex_dump(KERN_INFO, "Data: ", DUMP_PREFIX_OFFSET, 16, 1, skb->head, skb->end, true);
+    printk(KERN_INFO "\n");
+    //print tcp info
+    printk("tcp header set? %d\n", skb_transport_header_was_set(skb));
+    if(skb_transport_header_was_set(skb))
+        printk(KERN_INFO "tcp start address %p, tcp end address %p\n", skb_transport_header(skb), skb->data);
+    //
+    */
+    /*
+    printk("protocol %d\n", skb->protocol);
+    ipp = (struct iphdr *) skb_network_header(skb);
+    if (ipp && ipp->protocol == IPPROTO_TCP) {
+        hdr = (struct tcphdr *) ((__u32 *) ipp + ipp->ihl);
+        printk("TCP ports: source : %d, dest: %d.\n", htons(hdr->source), htons(hdr->dest));
+    }
+    */
 	
 
 	if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
