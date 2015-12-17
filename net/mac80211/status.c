@@ -185,14 +185,19 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
     struct iphdr *ipp;
     struct tcphdr *hdr;
 
+    printk(KERN_INFO "frame_acked called by ieee80211 skb : %p\n", skb);
+    /*
 	printk(KERN_INFO "frame_acked called\n");
     print_hex_dump(KERN_INFO, "skbuff: ", DUMP_PREFIX_OFFSET, 16, 1, skb, sizeof(struct sk_buff), true); 
     printk(KERN_INFO "head to tail dump\n");
     print_hex_dump(KERN_INFO, "Data: ", DUMP_PREFIX_OFFSET, 16, 1, skb->head, skb->end, true);
     printk(KERN_INFO "\n");
     //print tcp info
-    
+    printk("tcp header set? %d\n", skb_transport_header_was_set(skb));
+    if(skb_transport_header_was_set(skb))
+        printk(KERN_INFO "tcp start address %p, tcp end address %p\n", skb_transport_header(skb), skb->data);
     //
+    */
     /*
     printk("protocol %d\n", skb->protocol);
     ipp = (struct iphdr *) skb_network_header(skb);
