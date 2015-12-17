@@ -2319,16 +2319,20 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 	struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
 	int padpos, padsize;
 	unsigned long flags;
-
+	struct ethhdr *mh=eth_hdr(skb);
 	ath_dbg(common, XMIT, "TX complete: skb: %p\n", skb);
 
 	if (sc->sc_ah->caldata)
 		set_bit(PAPRD_PACKET_SENT, &sc->sc_ah->caldata->cal_flags);
 
-	if (!(tx_flags & ATH_TX_ERROR))
+	if (!(tx_flags & ATH_TX_ERROR)){
 		/* Frame was ACKed */
 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
-
+		printk(KERN_INFO "Source MAC=%x:%x:%x:%x:%x:%x\n",mh->h_source[0],mh->h_source[1],mh->h_source[2],mh->h_source[3],mh->h_source[4],mh->h_source[5]);
+		
+		printk(KERN_INFO "Destination MAC=%x:%x:%x:%x:%x:%x\n",mh->h_dest[0],mh->h_dest[1],mh->h_dest[2],mh->h_dest[3],mh->h_dest[4],mh->h_dest[5]);
+		printk(KERN_INFO "h_proto : %x\n", ntohs(mh->h_proto));
+	}
 	padpos = ieee80211_hdrlen(hdr->frame_control);
 	padsize = padpos & 3;
 	if (padsize && skb->len>padpos+padsize) {
