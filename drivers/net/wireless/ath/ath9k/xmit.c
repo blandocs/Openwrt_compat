@@ -17,6 +17,9 @@
 #include <linux/dma-mapping.h>
 #include "ath9k.h"
 #include "ar9003_mac.h"
+#include <linux/ieee80211.h>
+#include <linux/ip.h>
+#include <linux/tcp.h>
 
 #define BITS_PER_BYTE           8
 #define OFDM_PLCP_BITS          22
@@ -2319,8 +2322,8 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 	struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
 	int padpos, padsize;
 	unsigned long flags;
-	struct ethhdr *mh=eth_hdr(skb);
 	ath_dbg(common, XMIT, "TX complete: skb: %p\n", skb);
+    
     printk(KERN_INFO "TX complete: skb: %p\n", skb);
     printk(KERN_INFO "tx_flags : %d\n", tx_flags);
     printk(KERN_INFO "skb pkt_type: %d\n", skb->protocol);
@@ -2328,18 +2331,76 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
     printk(KERN_INFO "network_header: %p\n", skb_network_header(skb));
     printk(KERN_INFO "transport_header: %p\n", skb_transport_header(skb));
     
-    
+
+
     if (sc->sc_ah->caldata)
 		set_bit(PAPRD_PACKET_SENT, &sc->sc_ah->caldata->cal_flags);
 
 	if (!(tx_flags & ATH_TX_ERROR)){
+        struct ieee80211_hdr * mymac_hdr = (struct ieee80211_hdr *)(skb_mac_header(skb));
+        struct iphdr * myiph = (struct iphdr *)(skb_network_header(skb));
+        struct tcphdr * mytcph = (struct tcphdr *)(skb_transport_header(skb));
 		/* Frame was ACKed */
 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
+		/*
+		printk(KERN_INFO "ethhdr: %p, mh->h_dest : %p, mh->h_source : %p, mh->proto : %p \n", mh, mh->h_dest, mh->h_source, &(mh->h_proto));
 		printk(KERN_INFO "Source MAC=%x:%x:%x:%x:%x:%x\n",mh->h_source[0],mh->h_source[1],mh->h_source[2],mh->h_source[3],mh->h_source[4],mh->h_source[5]);
 		
 		printk(KERN_INFO "Destination MAC=%x:%x:%x:%x:%x:%x\n",mh->h_dest[0],mh->h_dest[1],mh->h_dest[2],mh->h_dest[3],mh->h_dest[4],mh->h_dest[5]);
-		printk(KERN_INFO "h_proto : %x\n", ntohs(mh->h_proto));
-	}
+		printk(KERN_INFO "h_proto : %hu\n", ntohs(mh->h_proto));
+	*/
+	 /*   unsigned char * start = (unsigned char *)skb->data;
+	    unsigned char * end = (unsigned char *)skb->tail;
+	    int i = 0;
+	    printk(KERN_INFO "start : %p\n", start);
+        printk(KERN_INFO "========================================\n");
+	    for(;start + i != end ;i++){
+	        if((start + i) == skb_mac_header(skb))   
+                printk(KERN_INFO "mac========================================\n");
+            if((start + i) == skb_network_header(skb)) 
+                printk(KERN_INFO "network========================================\n");
+            if((start + i) == skb_transport_header(skb)) 
+                printk(KERN_INFO "transport========================================\n");
+	        
+	        printk(KERN_INFO "%02x ", *(start + i));
+	        
+	    }
+	    printk(KERN_INFO "end : %p\n", end);
+	    printk(KERN_INFO "\n");
+    */
+        printk(KERN_INFO "mac========================================\n");
+        printk(KERN_INFO "mac header\n");
+	    printk(KERN_INFO "frame_control : 0x%04x\n", htons(mymac_hdr->frame_control));
+	    printk(KERN_INFO "duration_id: 0x%04x\n", htons(mymac_hdr->duration_id));
+        printk(KERN_INFO "addr1 : %02x:%02x:%02x:%02x:%02x:%02x\n", mymac_hdr->addr1[0], mymac_hdr->addr1[1], mymac_hdr->addr1[2], mymac_hdr->addr1[3], mymac_hdr->addr1[4], mymac_hdr->addr1[5]); 
+        printk(KERN_INFO "addr2 : %02x:%02x:%02x:%02x:%02x:%02x\n", mymac_hdr->addr2[0], mymac_hdr->addr2[1], mymac_hdr->addr2[2], mymac_hdr->addr2[3], mymac_hdr->addr2[4], mymac_hdr->addr2[5]); 
+        printk(KERN_INFO "addr3 : %02x:%02x:%02x:%02x:%02x:%02x\n", mymac_hdr->addr3[0], mymac_hdr->addr3[1], mymac_hdr->addr3[2], mymac_hdr->addr3[3], mymac_hdr->addr3[4], mymac_hdr->addr3[5]); 
+        printk(KERN_INFO "addr4 : %02x:%02x:%02x:%02x:%02x:%02x\n", mymac_hdr->addr4[0], mymac_hdr->addr4[1], mymac_hdr->addr4[2], mymac_hdr->addr4[3], mymac_hdr->addr4[4], mymac_hdr->addr4[5]); 
+	    printk(KERN_INFO "seq_ctrl: 0x%04x\n", htons(mymac_hdr->seq_ctrl));
+        
+        printk(KERN_INFO "network========================================\n");
+        printk(KERN_INFO "IP header\n");
+        printk(KERN_INFO "Ip Header length iph : %01x Bytes\n", (myiph->ihl)<<2);
+        printk(KERN_INFO "version: %01x\n", myiph->version);
+        printk(KERN_INFO "tos: Type of Service tos : %X\n", ntohs(myiph->tos));
+        printk(KERN_INFO "Total length tot_len : %04x Bytes\n", ntohs(myiph->tot_len));
+        printk(KERN_INFO "Id : %d\n", ntohs(myiph->id));
+        printk(KERN_INFO "Fragment offset : 0x%04X\n", ntohs(myiph->frag_off));
+        printk(KERN_INFO "TTL : %d sec\n", myiph->ttl);
+        printk(KERN_INFO "Protocol : %d\n", myiph->protocol);
+        printk(KERN_INFO "Checksum : %d\n", myiph->check);
+        
+        printk(KERN_INFO "saddr : %d.%d.%d.%d\n", (((myiph->saddr)>>24)&0xFF),(((myiph->saddr)>>16)&0xFF),(((myiph->saddr)>>8)&0xFF),(((myiph->saddr)>>0)&0xFF));
+        printk(KERN_INFO "daddr : %d.%d.%d.%d\n", (((myiph->daddr)>>24)&0xFF),(((myiph->daddr)>>16)&0xFF),(((myiph->daddr)>>8)&0xFF),(((myiph->daddr)>>0)&0xFF));
+    
+        if(myiph->protocol == 0x06){
+        printk(KERN_INFO "transport========================================\n");
+        printk(KERN_INFO "TCP src : %hu, TCP dst : %hu\n",ntohs(mytcph->source),ntohs(mytcph->dest));
+        printk(KERN_INFO "TCP seq : %u, TCP ack seq : %u\n", ntohl(mytcph->seq), ntohl(mytcph->ack_seq));
+        printk(KERN_INFO "TCP doff : %hu, TCP window : %hu\n",ntohs((mytcph->doff)<<2),ntohs(mytcph->window));
+        printk(KERN_INFO "TCP check : 0x%hx, TCP urg_ptr : %hu\n",ntohs(mytcph->check),ntohs(mytcph->urg_ptr));
+        }
+    }
 	padpos = ieee80211_hdrlen(hdr->frame_control);
 	padsize = padpos & 3;
 	if (padsize && skb->len>padpos+padsize) {
