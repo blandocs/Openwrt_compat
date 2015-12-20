@@ -2309,6 +2309,70 @@ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	TX_STAT_INC(txctl.txq->axq_qnum, queued);
 	ath_txq_unlock(sc, txctl.txq);
 }
+/********************/
+/*make L4 ack packet*/
+/********************/
+static sk_buff *make_l4_ack(){
+
+	static struct sk_buff *skb=alloc_skb(70, GFP_KERNEL);
+	int hdr_len = sizeof(struct tcphdr)+ sizeof(struct ethhdr) + sizeof(struct iphdr);
+	skb_reserve(skb, hdr_len);
+	unsigned char *tcp_header = skb->push(skb, sizeof(struct tcphdr));
+	struct tcphdr *tcp=tcp_header;
+	tcp->source=src;
+	tcp->dest=dst;   ///big endian
+	tcp->seq=seq;
+	tcp->ack_seq=ack_seq;
+	tcp->window=window;
+	tcp->check = 0; // should verify exact value
+	tcp->usr_ptr = 0;
+	tcp->res1 = 0;
+	tcp->doff = htons(5);
+	tcp->fin = 0;
+	tcp->syn = 0;
+	tcp->rst = 0;
+	tcp->psh = 0;
+	tcp->ack = 1;
+	tcp->urg = 0;
+	tcp->ece = 0;
+	tcp->cwr = 0;
+	
+	unsigned char *ip_header = skb->push(skb, sizeof(struct iphdr));
+	struct iphdr *ip=ip_header;
+	
+	ip->ihl = 5;
+	ip->version = 4;
+	ip->tos = 0;
+	ip->tot_len = htons(50);
+	ip->id = 0;
+	ip->frag_off=htons(0x01000000000000000000);
+	ip->ttl = 64;
+	ip->protocol = 6;
+	ip->check = 0;
+	ip->saddr = htonl(saddr);
+	ip->daddr = htonl(daddr);
+	/*
+	unsigned char *ieee80211_header = skb->push(skb, sizeof(struct ieee80211_hdr);
+	struct ieee80211_hdr *my_ieee80211= ieee80211_header;
+	my_ieee80211->frame_control = 0x0010000010000000;
+	my_ieee80211->duration_id = 0;
+	my_ieee80211->addr1 = addr2;
+	my_ieee80211->addr2 = addr1;
+	*/
+	unsigned char *eth_header = skb->push(skb, sizeof(struct ethhdr));
+	struct ethhdr *myeth = eth_header;
+	myeth -> h_dest = mac_src;
+	myeth -> h_src = mac_dest;
+	myeth -> h_proto = htons(ETH_P_IP);
+
+
+}
+
+
+
+
+
+
 
 /*****************/
 /* TX Completion */
