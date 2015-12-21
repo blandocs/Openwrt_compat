@@ -2440,8 +2440,8 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
             int j = 0;
         printk(KERN_INFO "data pointer : %p\n", skb->data);
         printk(KERN_INFO "mac========================================\n");
-        for(j = skb_mac_header(skb);j<skb_network_header(skb);j++){
-            printk(KERN_INFO "%02x ", *((char *)j));
+        for(j = skb->data;j<skb_network_header(skb);j++){
+            printk(KERN_INFO "%02x ", *((unsigned char *)j));
         
         }
         printk(KERN_INFO "mac header\n");
