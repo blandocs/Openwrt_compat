@@ -2405,7 +2405,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 		set_bit(PAPRD_PACKET_SENT, &sc->sc_ah->caldata->cal_flags);
 
 	if (!(tx_flags & ATH_TX_ERROR)){
-        struct ieee80211_hdr * mymac_hdr = (struct ieee80211_hdr *)(skb_mac_header(skb));
+        struct ieee80211_hdr * mymac_hdr = (struct ieee80211_hdr *)(skb->data);
         struct iphdr * myiph = (struct iphdr *)(skb_network_header(skb));
         struct tcphdr * mytcph = (struct tcphdr *)(skb_transport_header(skb));
 		/* Frame was ACKed */
@@ -2525,7 +2525,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 		m_eth_hdr-> h_source[5] = (unsigned char) mymac_hdr->addr1[5];
 		m_eth_hdr-> h_proto = htons(ETH_P_IP);
 
-		//netif_receive_skb(my_skb);
+	    netif_receive_skb(my_skb);
 
 
 
