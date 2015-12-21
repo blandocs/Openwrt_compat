@@ -2436,7 +2436,14 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 	    printk(KERN_INFO "end : %p\n", end);
 	    printk(KERN_INFO "\n");
     */
+        if(myiph->protocol == 0x06){
+            int j = 0;
+        printk(KERN_INFO "data pointer : %p\n", skb->data);
         printk(KERN_INFO "mac========================================\n");
+        for(j = skb_mac_header(skb);j<skb_network_header(skb);j++){
+            printk(KERN_INFO "%02x ", *((char *)j));
+        
+        }
         printk(KERN_INFO "mac header\n");
 	    printk(KERN_INFO "frame_control : 0x%04x\n", (mymac_hdr->frame_control));
 	    printk(KERN_INFO "duration_id: 0x%04x\n", (mymac_hdr->duration_id));
@@ -2461,7 +2468,6 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
         printk(KERN_INFO "saddr : %d.%d.%d.%d\n", (((myiph->saddr)>>24)&0xFF),(((myiph->saddr)>>16)&0xFF),(((myiph->saddr)>>8)&0xFF),(((myiph->saddr)>>0)&0xFF));
         printk(KERN_INFO "daddr : %d.%d.%d.%d\n", (((myiph->daddr)>>24)&0xFF),(((myiph->daddr)>>16)&0xFF),(((myiph->daddr)>>8)&0xFF),(((myiph->daddr)>>0)&0xFF));
     
-        if(myiph->protocol == 0x06){
         printk(KERN_INFO "transport========================================\n");
         printk(KERN_INFO "TCP src : %hu, TCP dst : %hu\n",ntohs(mytcph->source),ntohs(mytcph->dest));
         printk(KERN_INFO "TCP seq : %u, TCP ack seq : %u\n", ntohl(mytcph->seq), ntohl(mytcph->ack_seq));
