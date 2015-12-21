@@ -2309,9 +2309,11 @@ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	TX_STAT_INC(txctl.txq->axq_qnum, queued);
 	ath_txq_unlock(sc, txctl.txq);
 }
+
 /********************/
 /*make L4 ack packet*/
 /********************/
+/*
 static sk_buff *make_l4_ack(){
 
 	static struct sk_buff *skb=alloc_skb(70, GFP_KERNEL);
@@ -2351,14 +2353,14 @@ static sk_buff *make_l4_ack(){
 	ip->check = 0;
 	ip->saddr = htonl(saddr);
 	ip->daddr = htonl(daddr);
-	/*
+	(
 	unsigned char *ieee80211_header = skb->push(skb, sizeof(struct ieee80211_hdr);
 	struct ieee80211_hdr *my_ieee80211= ieee80211_header;
 	my_ieee80211->frame_control = 0x0010000010000000;
 	my_ieee80211->duration_id = 0;
 	my_ieee80211->addr1 = addr2;
 	my_ieee80211->addr2 = addr1;
-	*/
+	)
 	unsigned char *eth_header = skb->push(skb, sizeof(struct ethhdr));
 	struct ethhdr *myeth = eth_header;
 	myeth -> h_dest = mac_src;
@@ -2368,7 +2370,7 @@ static sk_buff *make_l4_ack(){
 
 }
 
-
+*/
 
 
 
@@ -2384,10 +2386,12 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
 	struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
+	struct sk_buff *my_skb = alloc_skb(100, GFP_KERNEL);
 	int padpos, padsize;
 	unsigned long flags;
 	ath_dbg(common, XMIT, "TX complete: skb: %p\n", skb);
-    
+   	int hdr_len = sizeof(struct tcphdr) + sizeof(struct ethhdr)+ sizeof(struct iphdr);
+   	skb_reserve(my_skb,hdr_len);
     printk(KERN_INFO "TX complete: skb: %p\n", skb);
     printk(KERN_INFO "tx_flags : %d\n", tx_flags);
     printk(KERN_INFO "skb pkt_type: %d\n", skb->protocol);
@@ -2434,8 +2438,8 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
     */
         printk(KERN_INFO "mac========================================\n");
         printk(KERN_INFO "mac header\n");
-	    printk(KERN_INFO "frame_control : 0x%04x\n", htons(mymac_hdr->frame_control));
-	    printk(KERN_INFO "duration_id: 0x%04x\n", htons(mymac_hdr->duration_id));
+	    printk(KERN_INFO "frame_control : 0x%04x\n", (mymac_hdr->frame_control));
+	    printk(KERN_INFO "duration_id: 0x%04x\n", (mymac_hdr->duration_id));
         printk(KERN_INFO "addr1 : %02x:%02x:%02x:%02x:%02x:%02x\n", mymac_hdr->addr1[0], mymac_hdr->addr1[1], mymac_hdr->addr1[2], mymac_hdr->addr1[3], mymac_hdr->addr1[4], mymac_hdr->addr1[5]); 
         printk(KERN_INFO "addr2 : %02x:%02x:%02x:%02x:%02x:%02x\n", mymac_hdr->addr2[0], mymac_hdr->addr2[1], mymac_hdr->addr2[2], mymac_hdr->addr2[3], mymac_hdr->addr2[4], mymac_hdr->addr2[5]); 
         printk(KERN_INFO "addr3 : %02x:%02x:%02x:%02x:%02x:%02x\n", mymac_hdr->addr3[0], mymac_hdr->addr3[1], mymac_hdr->addr3[2], mymac_hdr->addr3[3], mymac_hdr->addr3[4], mymac_hdr->addr3[5]); 
@@ -2463,6 +2467,65 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
         printk(KERN_INFO "TCP seq : %u, TCP ack seq : %u\n", ntohl(mytcph->seq), ntohl(mytcph->ack_seq));
         printk(KERN_INFO "TCP doff : %hu, TCP window : %hu\n",ntohs((mytcph->doff)<<2),ntohs(mytcph->window));
         printk(KERN_INFO "TCP check : 0x%hx, TCP urg_ptr : %hu\n",ntohs(mytcph->check),ntohs(mytcph->urg_ptr));
+
+        /* make l4 ack and transmit */
+
+        
+        struct tcphdr *m_tcp_hdr=(struct tcphdr *) skb_push(my_skb,sizeof(struct tcphdr));
+        m_tcp_hdr->source = mytcph->dest;
+        m_tcp_hdr->dest = mytcph->source;
+        m_tcp_hdr->seq = mytcph->ack_seq;
+        m_tcp_hdr->ack_seq = htonl(ntohl(mytcph->seq)+1);
+        m_tcp_hdr->window = mytcph->window; // verify this value
+		m_tcp_hdr->check = 0 ;
+		m_tcp_hdr->urg_ptr = 0;
+		m_tcp_hdr->res1 = 0;
+		m_tcp_hdr->doff = htons(5);
+		m_tcp_hdr->fin = 0;
+		m_tcp_hdr->syn = 0;
+		m_tcp_hdr->rst = 0;
+		m_tcp_hdr->psh = 0;
+		m_tcp_hdr->ack = 1;
+		m_tcp_hdr->urg = 0;
+		m_tcp_hdr->ece = 0;
+		m_tcp_hdr->cwr = 0;
+		
+		struct iphdr *m_ip_hdr=(struct iphdr *) skb_push(my_skb,sizeof(struct iphdr));
+		m_ip_hdr->ihl = 5;
+		m_ip_hdr->version = 4;
+		m_ip_hdr->tos = 0;
+		m_ip_hdr->tot_len = htons(sizeof(struct iphdr)+sizeof(struct ethhdr));
+		m_ip_hdr->id = 0;
+		m_ip_hdr->frag_off = htons(0x0100000000000000);
+		m_ip_hdr->ttl = 64;
+		m_ip_hdr->protocol = 6;
+		m_ip_hdr->check = 0;
+		m_ip_hdr->saddr =  myiph->daddr;
+		m_ip_hdr->daddr =  myiph->saddr;
+
+		
+		struct ethhdr *m_eth_hdr = (struct ethhdr *) skb_push(my_skb,sizeof(struct ethhdr));
+		m_eth_hdr-> h_dest[0] = (unsigned char) mymac_hdr->addr3[0];
+		m_eth_hdr-> h_dest[1] = (unsigned char) mymac_hdr->addr3[1];
+		m_eth_hdr-> h_dest[2] = (unsigned char) mymac_hdr->addr3[2];
+		m_eth_hdr-> h_dest[3] = (unsigned char) mymac_hdr->addr3[3];
+		m_eth_hdr-> h_dest[4] = (unsigned char) mymac_hdr->addr3[4];
+		m_eth_hdr-> h_dest[5] = (unsigned char) mymac_hdr->addr3[5];
+		m_eth_hdr-> h_source[0] = (unsigned char) mymac_hdr->addr1[0];
+		m_eth_hdr-> h_source[1] = (unsigned char) mymac_hdr->addr1[1];
+		m_eth_hdr-> h_source[2] = (unsigned char) mymac_hdr->addr1[2];
+		m_eth_hdr-> h_source[3] = (unsigned char) mymac_hdr->addr1[3];
+		m_eth_hdr-> h_source[4] = (unsigned char) mymac_hdr->addr1[4];
+		m_eth_hdr-> h_source[5] = (unsigned char) mymac_hdr->addr1[5];
+		m_eth_hdr-> h_proto = htons(ETH_P_IP);
+
+		//netif_receive_skb(my_skb);
+
+
+
+
+        
+        
         }
     }
 	padpos = ieee80211_hdrlen(hdr->frame_control);
