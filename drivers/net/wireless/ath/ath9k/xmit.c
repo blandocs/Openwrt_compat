@@ -2552,6 +2552,14 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			skb_set_transport_header(my_skb, sizeof(struct ethhdr)+sizeof(struct iphdr));
 			skb_set_network_header(my_skb, sizeof(struct ethhdr));
 			skb_set_mac_header(my_skb,0);
+			
+
+
+			printk(KERN_INFO "ACK info========================================\n");
+			int k;
+			for(k = my_skb->data;j<my_skb->tail;k++){
+				printk(KERN_INFO "%02x ", *((unsigned char *)k));
+
 
 			struct tcphdr * mtcph = (struct tcphdr *)(skb_transport_header(my_skb));
 			printk(KERN_INFO "transport========================================\n");
