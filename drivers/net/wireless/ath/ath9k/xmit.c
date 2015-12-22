@@ -2482,7 +2482,9 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			m_tcp_hdr->dest = mytcph->source;
 			m_tcp_hdr->seq = mytcph->ack_seq;
 			m_tcp_hdr->ack_seq = htonl(ntohl(mytcph->seq)+(ntohs(myiph->tot_len)-(ntohs(mytcph->doff))*4-sizeof(struct iphdr)));
+			//m_tcp_hdr->ack_seq = ntohl(mytcph->seq)+(ntohs(myiph->tot_len)-(ntohs(mytcph->doff))*4-sizeof(struct iphdr));
 			m_tcp_hdr->window = htons(64); // verify this value
+			//m_tcp_hdr->window = 64; // verify this value
 			m_tcp_hdr->check = 0 ;
 			m_tcp_hdr->urg_ptr = 0;
 			m_tcp_hdr->res1 = 0;
@@ -2509,8 +2511,10 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			m_ip_hdr->version = 4;
 			m_ip_hdr->tos = 0;
 			m_ip_hdr->tot_len = htons(sizeof(struct iphdr)+sizeof(struct tcphdr));
+			//m_ip_hdr->tot_len = sizeof(struct iphdr)+sizeof(struct tcphdr);
 			m_ip_hdr->id = 0;
-			m_ip_hdr->frag_off = htons(0x0100000000000000);
+			m_ip_hdr->frag_off = htons(0x4000);
+			//m_ip_hdr->frag_off = 0x4000;
 			m_ip_hdr->ttl = 64;
 			m_ip_hdr->protocol = 6;
 			m_ip_hdr->check = 0;
@@ -2546,6 +2550,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			m_eth_hdr-> h_source[3] = (unsigned char) dstaddr[3];
 			m_eth_hdr-> h_source[4] = (unsigned char) dstaddr[4];
 			m_eth_hdr-> h_source[5] = (unsigned char) dstaddr[5];
+		//	m_eth_hdr-> h_proto = ETH_P_IP;
 			m_eth_hdr-> h_proto = htons(ETH_P_IP);
 			
 			
@@ -2557,9 +2562,9 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 
 			printk(KERN_INFO "ACK info========================================\n");
 			int k;
-			for(k = my_skb->data;j<my_skb->tail;k++){
+			for(k = my_skb->data;k<my_skb->tail;k++){
 				printk(KERN_INFO "%02x ", *((unsigned char *)k));
-
+			}
 
 			struct tcphdr * mtcph = (struct tcphdr *)(skb_transport_header(my_skb));
 			printk(KERN_INFO "transport========================================\n");
@@ -2594,7 +2599,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			printk(KERN_INFO "my skb tail point : %p\n", my_skb->tail);
 			*/
 			
-			//netif_receive_skb(my_skb);
+			netif_receive_skb(skb);
 
 
 
