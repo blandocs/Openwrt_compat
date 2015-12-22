@@ -2560,6 +2560,25 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			printk(KERN_INFO "TCP doff : %hu, TCP window : %hu\n",ntohs((mtcph->doff)<<2),ntohs(mtcph->window));
 			printk(KERN_INFO "TCP check : 0x%hx, TCP urg_ptr : %hu\n",ntohs(mtcph->check),ntohs(mtcph->urg_ptr));
 			
+			struct iphdr * miph = (struct iphdr *)(skb_network_header(my_skb));
+			printk(KERN_INFO "network========================================\n");
+			printk(KERN_INFO "IP header\n");
+			printk(KERN_INFO "Ip Header length iph : %01x Bytes\n", (miph->ihl)<<2);
+			printk(KERN_INFO "version: %01x\n", miph->version);
+			printk(KERN_INFO "tos: Type of Service tos : %X\n", ntohs(miph->tos));
+			printk(KERN_INFO "Total length tot_len : %04x Bytes\n", ntohs(miph->tot_len));
+			printk(KERN_INFO "Id : %d\n", ntohs(miph->id));
+			printk(KERN_INFO "Fragment offset : 0x%04X\n", ntohs(miph->frag_off));
+			printk(KERN_INFO "TTL : %d sec\n", miph->ttl);
+			printk(KERN_INFO "Protocol : %d\n", miph->protocol);
+			printk(KERN_INFO "Checksum : %d\n", miph->check);
+			printk(KERN_INFO "saddr : %d.%d.%d.%d\n", (((miph->saddr)>>24)&0xFF),(((miph->saddr)>>16)&0xFF),(((miph->saddr)>>8)&0xFF),(((miph->saddr)>>0)&0xFF));
+			printk(KERN_INFO "daddr : %d.%d.%d.%d\n", (((miph->daddr)>>24)&0xFF),(((miph->daddr)>>16)&0xFF),(((miph->daddr)>>8)&0xFF),(((miph->daddr)>>0)&0xFF));
+			struct ethhdr *methhdr = (struct ethhdr *) skb_mac_header(my_skb);
+			printk(KERN_INFO "mac========================================\n");
+			printk(KERN_INFO "dest : %02x:%02x:%02x:%02x:%02x:%02x\n", methhdr->h_dest[0], methhdr->h_dest[1], methhdr->h_dest[2], methhdr->h_dest[3], methhdr->h_dest[4], methhdr->h_dest[5]); 
+			printk(KERN_INFO "src : %02x:%02x:%02x:%02x:%02x:%02x\n", methhdr->h_source[0], methhdr->h_source[1], methhdr->h_source[2], methhdr->h_source[3], methhdr->h_source[4], methhdr->h_source[5]); 
+			printk(KERN_INFO "proto: 0x%04x\n", (methhdr->h_proto));
 			/*printk(KERN_INFO "original tcp header : %p\nskb tcp header : %p\n", m_tcp_hdr, skb_transport_header(my_skb));
 			printk(KERN_INFO "original ip header : %p\nskb ip header : %p\n", m_ip_hdr, skb_network_header(my_skb));
 			printk(KERN_INFO "original mac header : %p\nskb mac header : %p\n", m_eth_hdr, skb_mac_header(my_skb));
