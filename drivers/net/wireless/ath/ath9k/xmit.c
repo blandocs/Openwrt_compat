@@ -2389,13 +2389,13 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 	int padpos, padsize;
 	unsigned long flags;
 	ath_dbg(common, XMIT, "TX complete: skb: %p\n", skb);
-	printk(KERN_INFO "TX complete: skb: %p\n", skb);
+	/*printk(KERN_INFO "TX complete: skb: %p\n", skb);
 	printk(KERN_INFO "tx_flags : %d\n", tx_flags);
 	printk(KERN_INFO "skb pkt_type: %d\n", skb->protocol);
 	printk(KERN_INFO "mac_header: %p\n", skb_mac_header(skb));
 	printk(KERN_INFO "network_header: %p\n", skb_network_header(skb));
 	printk(KERN_INFO "transport_header: %p\n", skb_transport_header(skb));
-
+	*/
 
 
 	if (sc->sc_ah->caldata)
@@ -2437,13 +2437,13 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			struct sk_buff *my_skb = alloc_skb(70, GFP_KERNEL);
 			int hdr_len = sizeof(struct tcphdr) + sizeof(struct ethhdr)+ sizeof(struct iphdr);
 			skb_reserve(my_skb,hdr_len);
-			int j = 0;
+			//int j = 0;
 			printk(KERN_INFO "data pointer : %p\n", skb->data);
 			printk(KERN_INFO "mac========================================\n");
-			for(j = skb->data;j<skb_network_header(skb);j++){
+			/*for(j = skb->data;j<skb_network_header(skb);j++){
 				printk(KERN_INFO "%02x ", *((unsigned char *)j));
 
-			}
+			}*/
 			printk(KERN_INFO "mac header\n");
 			printk(KERN_INFO "frame_control : 0x%04x\n", (mymac_hdr->frame_control));
 			printk(KERN_INFO "duration_id: 0x%04x\n", (mymac_hdr->duration_id));
@@ -2473,7 +2473,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			printk(KERN_INFO "TCP seq : %u, TCP ack seq : %u\n", ntohl(mytcph->seq), ntohl(mytcph->ack_seq));
 			printk(KERN_INFO "TCP doff : %hu, TCP window : %hu\n",ntohs((mytcph->doff)<<2),ntohs(mytcph->window));
 			printk(KERN_INFO "TCP check : 0x%hx, TCP urg_ptr : %hu\n",ntohs(mytcph->check),ntohs(mytcph->urg_ptr));
-			printk(KERN_INFO "data length : %h\n", (ntohs(myiph->tot_len)-sizeof(struct iphdr)-sizeof(struct tcphdr))); 
+			printk(KERN_INFO "data length : %d\n", (ntohs(myiph->tot_len)-sizeof(struct iphdr)-sizeof(struct tcphdr))); 
 			/* make l4 ack and transmit */
 
 
@@ -2481,8 +2481,8 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			m_tcp_hdr->source = mytcph->dest;
 			m_tcp_hdr->dest = mytcph->source;
 			m_tcp_hdr->seq = mytcph->ack_seq;
-			m_tcp_hdr->ack_seq = htonl(ntohl(mytcph->seq)+(ntohs(myiph->tot_len)-sizeof(struct tcphdr)-sizeof(struct iphdr)));
-			m_tcp_hdr->window = htons(131000); // verify this value
+			m_tcp_hdr->ack_seq = htonl(ntohl(mytcph->seq)+(ntohs(myiph->tot_len)-(ntohs(mytcph->doff))*4-sizeof(struct iphdr)));
+			m_tcp_hdr->window = htons(64); // verify this value
 			m_tcp_hdr->check = 0 ;
 			m_tcp_hdr->urg_ptr = 0;
 			m_tcp_hdr->res1 = 0;
@@ -2495,14 +2495,15 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			m_tcp_hdr->urg = 0;
 			m_tcp_hdr->ece = 0;
 			m_tcp_hdr->cwr = 0;
-
+			
+			/*
 			struct tcphdr * mtcph = (struct tcphdr *)(skb_transport_header(my_skb));
 			printk(KERN_INFO "transport========================================\n");
 			printk(KERN_INFO "TCP src : %hu, TCP dst : %hu\n",ntohs(mtcph->source),ntohs(mtcph->dest));
 			printk(KERN_INFO "TCP seq : %u, TCP ack seq : %u\n", ntohl(mtcph->seq), ntohl(mtcph->ack_seq));
 			printk(KERN_INFO "TCP doff : %hu, TCP window : %hu\n",ntohs((mtcph->doff)<<2),ntohs(mtcph->window));
 			printk(KERN_INFO "TCP check : 0x%hx, TCP urg_ptr : %hu\n",ntohs(mtcph->check),ntohs(mtcph->urg_ptr));
-
+			*/
 			struct iphdr *m_ip_hdr=(struct iphdr *) skb_push(my_skb,sizeof(struct iphdr));
 			m_ip_hdr->ihl = 5;
 			m_ip_hdr->version = 4;
@@ -2518,7 +2519,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 
 
 			struct ethhdr *m_eth_hdr = (struct ethhdr *) skb_push(my_skb,sizeof(struct ethhdr));
-			m_eth_hdr-> h_dest[0] = (unsigned char) mymac_hdr->addr3[0];
+			/*m_eth_hdr-> h_dest[0] = (unsigned char) mymac_hdr->addr3[0];
 			m_eth_hdr-> h_dest[1] = (unsigned char) mymac_hdr->addr3[1];
 			m_eth_hdr-> h_dest[2] = (unsigned char) mymac_hdr->addr3[2];
 			m_eth_hdr-> h_dest[3] = (unsigned char) mymac_hdr->addr3[3];
@@ -2530,8 +2531,42 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			m_eth_hdr-> h_source[3] = (unsigned char) mymac_hdr->addr1[3];
 			m_eth_hdr-> h_source[4] = (unsigned char) mymac_hdr->addr1[4];
 			m_eth_hdr-> h_source[5] = (unsigned char) mymac_hdr->addr1[5];
+			*/
+			u8 *srcaddr = ieee80211_get_SA(mymac_hdr);
+			u8 *dstaddr = ieee80211_get_DA(mymac_hdr);
+			m_eth_hdr-> h_dest[0] = (unsigned char) srcaddr[0];
+			m_eth_hdr-> h_dest[1] = (unsigned char) srcaddr[1];
+			m_eth_hdr-> h_dest[2] = (unsigned char) srcaddr[2];
+			m_eth_hdr-> h_dest[3] = (unsigned char) srcaddr[3];
+			m_eth_hdr-> h_dest[4] = (unsigned char) srcaddr[4];
+			m_eth_hdr-> h_dest[5] = (unsigned char) srcaddr[5];
+			m_eth_hdr-> h_source[0] = (unsigned char) dstaddr[0];
+			m_eth_hdr-> h_source[1] = (unsigned char) dstaddr[1];
+			m_eth_hdr-> h_source[2] = (unsigned char) dstaddr[2];
+			m_eth_hdr-> h_source[3] = (unsigned char) dstaddr[3];
+			m_eth_hdr-> h_source[4] = (unsigned char) dstaddr[4];
+			m_eth_hdr-> h_source[5] = (unsigned char) dstaddr[5];
 			m_eth_hdr-> h_proto = htons(ETH_P_IP);
+			
+			
+			skb_set_transport_header(my_skb, sizeof(struct ethhdr)+sizeof(struct iphdr));
+			skb_set_network_header(my_skb, sizeof(struct ethhdr));
+			skb_set_mac_header(my_skb,0);
 
+			struct tcphdr * mtcph = (struct tcphdr *)(skb_transport_header(my_skb));
+			printk(KERN_INFO "transport========================================\n");
+			printk(KERN_INFO "TCP src : %hu, TCP dst : %hu\n",ntohs(mtcph->source),ntohs(mtcph->dest));
+			printk(KERN_INFO "TCP seq : %u, TCP ack seq : %u\n", ntohl(mtcph->seq), ntohl(mtcph->ack_seq));
+			printk(KERN_INFO "TCP doff : %hu, TCP window : %hu\n",ntohs((mtcph->doff)<<2),ntohs(mtcph->window));
+			printk(KERN_INFO "TCP check : 0x%hx, TCP urg_ptr : %hu\n",ntohs(mtcph->check),ntohs(mtcph->urg_ptr));
+			
+			/*printk(KERN_INFO "original tcp header : %p\nskb tcp header : %p\n", m_tcp_hdr, skb_transport_header(my_skb));
+			printk(KERN_INFO "original ip header : %p\nskb ip header : %p\n", m_ip_hdr, skb_network_header(my_skb));
+			printk(KERN_INFO "original mac header : %p\nskb mac header : %p\n", m_eth_hdr, skb_mac_header(my_skb));
+			printk(KERN_INFO "my skb data point : %p\n", my_skb->data);
+			printk(KERN_INFO "my skb tail point : %p\n", my_skb->tail);
+			*/
+			
 			//netif_receive_skb(my_skb);
 
 
