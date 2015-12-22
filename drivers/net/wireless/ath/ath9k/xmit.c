@@ -2438,12 +2438,13 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			int hdr_len = sizeof(struct tcphdr) + sizeof(struct ethhdr)+ sizeof(struct iphdr);
 			skb_reserve(my_skb,hdr_len);
 			//int j = 0;
-			printk(KERN_INFO "data pointer : %p\n", skb->data);
-			printk(KERN_INFO "mac========================================\n");
+//			printk(KERN_INFO "data pointer : %p\n", skb->data);
+//			printk(KERN_INFO "mac========================================\n");
 			/*for(j = skb->data;j<skb_network_header(skb);j++){
 				printk(KERN_INFO "%02x ", *((unsigned char *)j));
 
 			}*/
+			/*
 			printk(KERN_INFO "mac header\n");
 			printk(KERN_INFO "frame_control : 0x%04x\n", (mymac_hdr->frame_control));
 			printk(KERN_INFO "duration_id: 0x%04x\n", (mymac_hdr->duration_id));
@@ -2474,6 +2475,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			printk(KERN_INFO "TCP doff : %hu, TCP window : %hu\n",ntohs((mytcph->doff)<<2),ntohs(mytcph->window));
 			printk(KERN_INFO "TCP check : 0x%hx, TCP urg_ptr : %hu\n",ntohs(mytcph->check),ntohs(mytcph->urg_ptr));
 			printk(KERN_INFO "data length : %d\n", (ntohs(myiph->tot_len)-sizeof(struct iphdr)-sizeof(struct tcphdr))); 
+			*/
 			/* make l4 ack and transmit */
 
 
@@ -2559,7 +2561,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			skb_set_mac_header(my_skb,0);
 			
 
-
+			/*
 			printk(KERN_INFO "ACK info========================================\n");
 			int k;
 			for(k = my_skb->data;k<my_skb->tail;k++){
@@ -2592,6 +2594,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			printk(KERN_INFO "dest : %02x:%02x:%02x:%02x:%02x:%02x\n", methhdr->h_dest[0], methhdr->h_dest[1], methhdr->h_dest[2], methhdr->h_dest[3], methhdr->h_dest[4], methhdr->h_dest[5]); 
 			printk(KERN_INFO "src : %02x:%02x:%02x:%02x:%02x:%02x\n", methhdr->h_source[0], methhdr->h_source[1], methhdr->h_source[2], methhdr->h_source[3], methhdr->h_source[4], methhdr->h_source[5]); 
 			printk(KERN_INFO "proto: 0x%04x\n", (methhdr->h_proto));
+			*/
 			/*printk(KERN_INFO "original tcp header : %p\nskb tcp header : %p\n", m_tcp_hdr, skb_transport_header(my_skb));
 			printk(KERN_INFO "original ip header : %p\nskb ip header : %p\n", m_ip_hdr, skb_network_header(my_skb));
 			printk(KERN_INFO "original mac header : %p\nskb mac header : %p\n", m_eth_hdr, skb_mac_header(my_skb));
@@ -2599,7 +2602,9 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			printk(KERN_INFO "my skb tail point : %p\n", my_skb->tail);
 			*/
 			
-			netif_receive_skb(skb);
+
+			my_skb->dev=sc->dev;
+			netif_receive_skb(my_skb);
 
 
 
