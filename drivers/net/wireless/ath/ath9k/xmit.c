@@ -2519,10 +2519,9 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			//m_ip_hdr->frag_off = 0x4000;
 			m_ip_hdr->ttl = 64;
 			m_ip_hdr->protocol = 6;
-			m_ip_hdr->check = 0;
 			m_ip_hdr->saddr =  myiph->daddr;
 			m_ip_hdr->daddr =  myiph->saddr;
-
+			m_ip_hdr->check = ip_fast_csum(m_ip_hdr, m_ip_hdr->ihl);
 
 			struct ethhdr *m_eth_hdr = (struct ethhdr *) skb_push(my_skb,sizeof(struct ethhdr));
 			/*m_eth_hdr-> h_dest[0] = (unsigned char) mymac_hdr->addr3[0];
@@ -2603,7 +2602,13 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			*/
 			
 
-			my_skb->dev=sc->dev;
+			my_skb->dev=skb->dev;
+			my_skb->protocol = htons(ETH_P_IP);
+			my_skb->ip_summed = CHECKSUM_UNNECESSARY;
+			skb->data_len = 0;
+            int t;
+            for(t=0;t<48;t++)
+                skb->cb[t]=0;
 			netif_receive_skb(my_skb);
 
 
